@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>CodeCatalyst</title>
+    <link rel="stylesheet" href="static/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <img src="static/codecatalyst_logo.jpeg" alt="Logo" />
+        <h1>CodeCatalyst</h1>
+      </div>
+      <ul>
+        <li class="menu-item">
+          <a href="#" onclick="refreshPage()" class="new-chat">New Chat</a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="btn btn-secondary btn-block"
+            >Model Configuration</a
+          >
+        </li>
+      </ul>
+      <div class="slider-container">
+        <label for="temperatureSlider" class="slider-label">
+          Temperature: <span id="temperatureValue">1.0</span>
+        </label>
+        <input
+          type="range"
+          class="form-range"
+          id="temperatureSlider"
+          min="0.1"
+          max="1"
+          step="0.1"
+          value="1.0"
+        />
+        <label for="tokensSlider" class="slider-label">
+          Max New Tokens: <span id="tokensValue">256</span>
+        </label>
+        <input
+          type="range"
+          class="form-range"
+          id="tokensSlider"
+          min="10"
+          max="512"
+          step="1"
+          value="256"
+        />
+        <!-- Add the Modify button here -->
+        <button id="modifyButton" class="btn btn-primary">Modify</button>
+      </div>
+
+      <ul class="bottom">
+        <div class="container">
+          <div class="text-center mt-5">
+            <a href="{{ url_for('login') }}" class="btn btn-primary"
+              >Login/Register</a
+            >
+          </div>
+        </div>
+      </ul>
+    </div>
+    <div class="main-content">
+      <div class="chat-parent">
+        <div class="chat-container" id="chatContainer"></div>
+      </div>
+
+      <form id="promptForm">
+        <div class="prompt-input-container">
+          <textarea
+            id="prompt"
+            placeholder="Ask CodeCatalyst"
+            class="form-control"
+            autocomplete="off"
+            rows="1.9"
+            style="
+              width: 100%;
+              height: 10px;
+              overflow-y: hidden; /* added this line */
+              border-radius: 10px;
+              padding: 8px 10px 10px 10px;
+              border: 1px solid #ccc;
+              font-size: 16px;
+              font-family: Arial, sans-serif;
+              color: #333;
+              background-color: #f9f9f9;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            "
+            oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px';"
+            onkeydown="if (event.key === 'Enter' && !event.shiftKey) { sendPromptToBackend(this.value); } else if (event.key === 'Enter' && event.shiftKey) { this.value += '\n'; }"
+          ></textarea>
+          <button type="submit" class="btn btn-primary inside-btn">▲</button>
+        </div>
+      </form>
+      <div class="prompt-box-container" id="promptBoxContainer"></div>
+
+      <div id="initialView" class="initial-view">
+        <img
+          src="static/codecatalyst_logo.jpeg"
+          alt="Logo"
+          class="initial-logo"
+        />
+        <div class="container-boxes">
+          <div class="content-box">
+            Boost your coding speed with instant code generation and real-time
+            suggestions!
+          </div>
+          <div class="content-box">
+            Effortlessly generate clean and optimized code for seamless
+            development experiences.
+          </div>
+          <div class="content-box">
+            Tailor-made code snippets for your unique project requirements.
+          </div>
+          <div class="content-box">
+            Learn as you code with comprehensive explanations and best
+            practices.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("promptForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const prompt = document.getElementById("prompt").value;
+          if (prompt) {
+            document.getElementById("initialView").style.display = "none";
+            addChatBubble(prompt, "user");
+            sendPromptToBackend(prompt);
+            document.getElementById("prompt").value = "";
+          }
+        });
+
+      function addChatBubble(text, type) {
+        const chatContainer = document.getElementById("chatContainer");
+        const chatBubble = document.createElement("div");
+        chatBubble.className = `chat-bubble ${type}`;
+        if (type === "ai") {
+          chatBubble.innerHTML = `<pre><code>${escapeHtml(text)}</code></pre>`;
+        } else {
+          chatBubble.textContent = text;
+        }
+        chatContainer.appendChild(chatBubble);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      function refreshPage() {
+        window.location.reload();
+      }
+
+      function sendPromptToBackend(prompt) {
+        fetch("/submit-prompt", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ prompt: prompt }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Success:", data);
+            addChatBubble(data.response, "ai");
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+
+      function escapeHtml(text) {
+        const map = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        };
+        return text.replace(/[&<>"']/g, function (m) {
+          return map[m];
+        });
+      }
+
+      document
+        .getElementById("temperatureSlider")
+        .addEventListener("input", function () {
+          document.getElementById("temperatureValue").textContent = this.value;
+        });
+
+      document
+        .getElementById("tokensSlider")
+        .addEventListener("input", function () {
+          document.getElementById("tokensValue").textContent = this.value;
+        });
+      document
+        .getElementById("modifyButton")
+        .addEventListener("click", function () {
+          const temperature =
+            document.getElementById("temperatureSlider").value;
+          const maxNewTokens = document.getElementById("tokensSlider").value;
+
+          fetch("/update-model-config", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              temperature: temperature,
+              max_new_tokens: maxNewTokens,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Success:", data);
+              alert("Model configuration updated successfully!");
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+    </script>
+  </body>
+</html>
