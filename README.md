@@ -15,4 +15,6 @@ The "app.py" file contains the backend of the project and it serves different pu
   The "test.ipynb" shows the preprocessing for the dataset
   The "asd.py" file shows the configuration I used for fine-tuning the dataset.
 
-  I hope you guys like the project. Although, I am uploading it late, but I had the idea before ChatGPT arrived and I had started working on it in mid 2023.
+  I hope you guys like the project. Although I am uploading it late, I had the idea before ChatGPT arrived, and I had started working on it in mid-2023.
+
+  If you guys find any problems or bugs, please feel free to reach out to meharoo261 @ gmail.com. I would appreciate any improvements, suggestions, or questions. 
